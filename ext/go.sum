@@ -1,2 +1,6 @@
+github.com/patrickmn/go-cache v2.1.0+incompatible h1:HRMgzkcYKYpi3C8ajMPV8OFXaaRUnok+kx1WdO15EQc=
+github.com/patrickmn/go-cache v2.1.0+incompatible/go.mod h1:3Qf8kWWT7OJRJbdiICTKqZju1ZixQ/KpMGzzAfe6+WQ=
 github.com/rogpeppe/go-charset v0.0.0-20180617210344-2471d30d28b4 h1:BN/Nyn2nWMoqGRA7G7paDNDqTXE30mXGqzzybrfo05w=
 github.com/rogpeppe/go-charset v0.0.0-20180617210344-2471d30d28b4/go.mod h1:qgYeAmZ5ZIpBWTGllZSQnw97Dj+woV0toclVaRGI8pc=
+github.com/vbisbest/goproxy v0.0.0-20200610193757-2ecfc1aa332b h1:/XI0i3726J6fDc0MIwfGrIgz1MGbsE/AOou30wJuzBM=
+github.com/vbisbest/goproxy v0.0.0-20200610193757-2ecfc1aa332b/go.mod h1:tobBB+K3WhunOWmteUqU7IIdGR29Ld58WhoBXdWtMmg=
