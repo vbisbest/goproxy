@@ -93,6 +93,16 @@ func removeProxyHeaders(ctx *ProxyCtx, r *http.Request) {
 	//   The Connection general-header field allows the sender to specify
 	//   options that are desired for that particular connection and MUST NOT
 	//   be communicated by proxies over further connections.
+
+	// When server reads http request it sets req.Close to true if
+	// "Connection" header contains "close".
+	// https://github.com/golang/go/blob/master/src/net/http/request.go#L1080
+	// Later, transfer.go adds "Connection: close" back when req.Close is true
+	// https://github.com/golang/go/blob/master/src/net/http/transfer.go#L275
+	// That's why tests that checks "Connection: close" removal fail
+	if r.Header.Get("Connection") == "close" {
+		r.Close = false
+	}
 	r.Header.Del("Connection")
 }
 
@@ -129,6 +139,14 @@ func (proxy *ProxyHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 				ctx.Logf("Received response %v", resp.Status)
 			}
 		}
+
+		var origBody io.ReadCloser
+
+		if resp != nil {
+			origBody = resp.Body
+			defer origBody.Close()
+		}
+
 		resp = proxy.filterResponse(resp, ctx)
 
 		if resp == nil {
@@ -144,8 +162,6 @@ func (proxy *ProxyHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 			}
 			return
 		}
-		origBody := resp.Body
-		defer origBody.Close()
 		ctx.Logf("Copying response to client %v [%d]", resp.Status, resp.StatusCode)
 		// http.ResponseWriter will take care of filling the correct response length
 		// Setting it now, might impose wrong value, contradicting the actual new
@@ -178,6 +194,7 @@ func NewProxyHttpServer() *ProxyHttpServer {
 		}),
 		Tr: &http.Transport{TLSClientConfig: tlsClientSkipVerify, Proxy: http.ProxyFromEnvironment},
 	}
+
 	proxy.ConnectDial = dialerFromEnv(&proxy)
 
 	return &proxy
