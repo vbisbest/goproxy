@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/exec"
@@ -950,8 +951,10 @@ func TestSimpleHttpRequest(t *testing.T) {
 	}
 	client := http.Client{Transport: tr}
 
-	resp, err := client.Get("http://google.de")
+	resp, err := client.Get("http://example.com")
 	if err != nil || resp.StatusCode != 200 {
+		x, _ := httputil.DumpResponse(resp, true)
+		fmt.Println(string(x))
 		t.Error("Error while requesting google with http", err)
 	}
 	resp, err = client.Get("http://google20012312031.de")
