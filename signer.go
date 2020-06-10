@@ -13,13 +13,14 @@ import (
 	"fmt"
 	"math/big"
 	mathrand "math/rand"
-	"runtime"
 	"net"
+	"runtime"
 	"sort"
 	"strings"
-	"time"
-	"github.com/patrickmn/go-cache"
 	"sync/atomic"
+	"time"
+
+	"github.com/patrickmn/go-cache"
 )
 
 func hashSorted(lst []string) []byte {
@@ -53,7 +54,7 @@ func signHost(ca tls.Certificate, hosts []string) (cert *tls.Certificate, err er
 		return
 	}
 
-    cert, err = generateCertificate(ca, hosts)
+	cert, err = generateCertificate(ca, hosts)
 
 	crtCache.Add(key, cert, cache.DefaultExpiration)
 
@@ -118,7 +119,6 @@ func generateCertificate(ca tls.Certificate, hosts []string) (cert *tls.Certific
 	}, nil
 }
 
-
 func signHostOld(ca tls.Certificate, hosts []string) (cert *tls.Certificate, err error) {
 	var x509ca *x509.Certificate
 
@@ -156,38 +156,23 @@ func signHostOld(ca tls.Certificate, hosts []string) (cert *tls.Certificate, err
 		}
 	}
 
-	hash := hashSorted(append(hosts, goproxySignerVersion, ":" + runtime.Version()))
+	hash := hashSorted(append(hosts, goproxySignerVersion, ":"+runtime.Version()))
 	var csprng CounterEncryptorRand
 	if csprng, err = NewCounterEncryptorRandFromKey(ca.PrivateKey, hash); err != nil {
 		return
 	}
-
-	var certpriv crypto.Signer
-	switch ca.PrivateKey.(type) {
-	case *rsa.PrivateKey:
-		if certpriv, err = rsa.GenerateKey(&csprng, 2048); err != nil {
-			return
-		}
-	case *ecdsa.PrivateKey:
-		if certpriv, err = ecdsa.GenerateKey(elliptic.P256(), &csprng); err != nil {
-			return
-		}
-	default:
-		err = fmt.Errorf("unsupported key type %T", ca.PrivateKey)
-	}
-
 	var derBytes []byte
-	if derBytes, err = x509.CreateCertificate(&csprng, &template, x509ca, certpriv.Public(), ca.PrivateKey); err != nil {
+	if derBytes, err = x509.CreateCertificate(&csprng, &template, x509ca, x509ca.PublicKey, ca.PrivateKey); err != nil {
 		return
 	}
 	return &tls.Certificate{
 		Certificate: [][]byte{derBytes, ca.Certificate[0]},
-		PrivateKey:  certpriv,
+		PrivateKey:  ca.PrivateKey,
 	}, nil
 }
 
 func init() {
 	serialCA = uint64(time.Now().Unix() * 1000000000)
-	certprivRSA, _ = rsa.GenerateKey(rand.Reader, 2048);
+	certprivRSA, _ = rsa.GenerateKey(rand.Reader, 2048)
 	certprivECDSA, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 }
